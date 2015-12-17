@@ -1,0 +1,41 @@
+{
+  "name": "hijack-require",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "devDependencies": {
+    "gulp-eslint": "^0.13.2",
+    "gulp": "^3.9.0",
+    "chai": "^3.4.1",
+    "gulp-load-plugins": "^0.10.0",
+    "gulp-mocha": "^2.2.0",
+    "gulp-istanbul": "^0.10.3",
+    "gulp-lintspaces": "^0.3.4",
+    "gulp-util": "^3.0.7",
+    "lodash": "^3.10.1",
+    "keypress": "^0.1.0",
+    "mockery": "^1.4.0",
+    "node-inspector": "^0.12.5",
+    "async-profile": "^0.4.0",
+    "commander": "^1.1.1",
+    "sinon-chai": "^2.8.0",
+    "lru-cache": "^2.0.4",
+    "sinon": "^1.17.2",
+    "sigmund": "^1.0.1",
+    "v8-profiler": "^5.5.0",
+    "ua-gulp-src-entries": "^0.1.0",
+    "ua-lintrc": "^1.0.11"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.ua.com:choover/hijack-require.git"
+  },
+  "author": "",
+  "license": "ISC"
+}
