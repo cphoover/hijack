@@ -13,12 +13,12 @@ Module.prototype.require = function (path) {
 
 	if (cache[resolvedPath]) {
 
-		if (cache[resolvedPath].uninitialized) {
-			cache[resolvedPath].uninitialized = false;
+		if (cache[resolvedPath].___uninitialized) {
+			cache[resolvedPath].___uninitialized = false;
 			cache[resolvedPath] = cache[resolvedPath]();
 		}
 
-		return (cache[resolvedPath].uninitialized === undefined) ? cache[resolvedPath] : this.__origRequire(path);
+		return (cache[resolvedPath].___uninitialized === undefined) ? cache[resolvedPath] : this.__origRequire(path);
 	}
 
 	return this.__origRequire(path);
@@ -33,7 +33,7 @@ Module.prototype.hijackRequire = function (path, fn) {
 		var resolvedPath = Module._resolveFilename(path, this);
 
 		cache[resolvedPath] = fn;
-		cache[resolvedPath].uninitialized = true;
+		cache[resolvedPath].___uninitialized = true;
 	} catch (e) {
 		if (e.code !== 'MODULE_NOT_FOUND') {
 			throw e;
