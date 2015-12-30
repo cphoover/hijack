@@ -14,7 +14,7 @@ require('../');
 
 describe('hijack require', function () {
 
-	it('performs within a reasonable amount of time (no more than 15% increase in speed)', function (done) {
+	it('performs within a reasonable amount of time (no more than 25% increase in speed)', function (done) {
 		// sandboxing benchmark into its own process..
 		exec('node ' + path.join(__dirname, '/benchmarks'), function (err, stdout) {
 			if (err) {
@@ -23,9 +23,14 @@ describe('hijack require', function () {
 			var result = JSON.parse(stdout);
 
 			console.log(result);
-			assert(((result.preHijacked * 0.15) + result.preHijacked) > result.postHijacked);
+			assert(((result.preHijacked * 0.25) + result.preHijacked) > result.postHijacked);
 			done();
 		});
+	});
+
+	it('doesn\'t break require on non hijacked modules', function () {
+		var os = require('os');
+		assert(_.isFunction(os.cpus));
 	});
 
 	it('works with core module', function () {
@@ -64,5 +69,27 @@ describe('hijack require', function () {
 		assert(lo.isEqual(lo.test, 'test'));
 	});
 
+});
 
+describe('hijackFn', function () {
+
+	it('preserves context', function () {
+		function TestClass() {
+		}
+
+		TestClass.prototype.world = ' world!';
+
+		TestClass.prototype.helloWorld = function () {
+			return 'hello';
+		};
+
+		var test = new TestClass();
+
+		module.hijackFn(test, 'helloWorld', function () {
+			return this.hijacked() + this.world;
+		});
+
+		assert(test.helloWorld(), 'hello world!');
+
+	});
 });
