@@ -28,8 +28,29 @@ describe('hijack require', function () {
 		});
 	});
 
+	it('won\'t break if the hijacked module hasn\'t been installed', function () {
+
+		function test() {
+			module.hijackRequire('asdf', function () {
+				return {};
+			});
+		}
+
+		assert.doesNotThrow(test);
+	});
+
+	it('will still throw if you are trying to incorrectly resolve a module', function () {
+		function test() {
+			module.hijackRequire({}, function () {
+				return {};
+			});
+		}
+		assert.throws(test);
+	});
+
 	it('doesn\'t break require on non hijacked modules', function () {
 		var os = require('os');
+
 		assert(_.isFunction(os.cpus));
 	});
 

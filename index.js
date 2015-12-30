@@ -27,10 +27,18 @@ Module.prototype.require = function (path) {
 // hijackRequire
 Module.prototype.hijackRequire = function (path, fn) {
 
-	var resolvedPath = Module._resolveFilename(path, this);
+	// @TODO do we really have to cause all of these unnecessary errors
+	// if the module isn't being required? seems like there has to be a better way
+	try {
+		var resolvedPath = Module._resolveFilename(path, this);
 
-	cache[resolvedPath] = fn;
-	cache[resolvedPath].uninitialized = true;
+		cache[resolvedPath] = fn;
+		cache[resolvedPath].uninitialized = true;
+	} catch (e) {
+		if (e.code !== 'MODULE_NOT_FOUND') {
+			throw e;
+		}
+	}
 };
 
 var originalFn  = 'hijacked',
