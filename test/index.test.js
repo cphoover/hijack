@@ -3,7 +3,14 @@
 
 var assert = require('assert'),
 	path = require('path'),
+	util = require('util'),
+	fs = require('fs'),
 	cp = require('child_process');
+
+var Bluebird = require('bluebird');
+
+Bluebird.promisifyAll(cp);
+Bluebird.promisifyAll(fs);
 
 var _ = require('lodash');
 
@@ -11,8 +18,32 @@ var exec = cp.exec;
 
 require('../');
 
+var RUN_SLOW_TESTS = process.env.RUN_SLOW || false; // eslint-disable-line no-process-env
 
 describe('hijack require', function () {
+
+	// slow test...
+	if (RUN_SLOW_TESTS) {
+		it('will work when used as a dependency from another project', function () {
+			var sandboxDestination = '/tmp',
+				sandboxLocation = path.join(sandboxDestination, 'hijack-sandbox'),
+				destinationModules = path.join(sandboxLocation, 'node_modules');
+
+			var script = [
+				util.format('cp -r "%s" "%s";', path.join(__dirname, 'hijack-sandbox', path.sep), sandboxLocation),
+				util.format('cp -r "%s" "%s";', path.join(__dirname, '..'), destinationModules),
+				util.format('cd %s;', sandboxLocation),
+				'node ./test.js;'
+			].join('\n');
+
+			this.timeout(50000);
+			return cp.execAsync(util.format('mkdir -p "%s"', sandboxLocation))
+				.return(script)
+				.then(cp.execAsync);
+
+		});
+	}
+
 
 	it('performs within a reasonable amount of time (no more than 25% increase in speed)', function (done) {
 		// sandboxing benchmark into its own process..
