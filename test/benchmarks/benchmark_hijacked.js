@@ -1,9 +1,10 @@
 'use strict';
 
-require('../../');
+var hijack = require('../../');
 
-module.hijackRequire('lodash', function () {
+hijack.require(module, 'lodash', function () {
 	var orig = require('fs');
+
 	orig.test = function () {
 		return 'test';
 	};

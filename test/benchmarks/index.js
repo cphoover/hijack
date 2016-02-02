@@ -24,9 +24,9 @@ function runBenchmark(file) {
 
 var preHijacked = runBenchmark('../fixture');
 
-require('../../');
+var hijack = require('../../');
 
-module.hijackRequire('fs', function () {
+hijack.require(module, 'fs', function () {
 	var fs =  require('fs');
 
 	fs.test = function () {

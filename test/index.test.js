@@ -1,13 +1,15 @@
 'use strict';
 
-
 var assert = require('assert'),
 	path = require('path'),
 	util = require('util'),
 	fs = require('fs'),
 	cp = require('child_process');
 
-var Bluebird = require('bluebird');
+var Bluebird = require('bluebird'),
+	request = require('request');
+
+request = Bluebird.promisify(request);
 
 Bluebird.promisifyAll(cp);
 Bluebird.promisifyAll(fs);
@@ -16,7 +18,7 @@ var _ = require('lodash');
 
 var exec = cp.exec;
 
-require('../');
+var hijack = require('../');
 
 var RUN_SLOW_TESTS = process.env.RUN_SLOW || false; // eslint-disable-line no-process-env
 
@@ -62,7 +64,7 @@ describe('hijack require', function () {
 	it('won\'t break if the hijacked module hasn\'t been installed', function () {
 
 		function test() {
-			module.hijackRequire('asdf', function () {
+			hijack.require(module, 'asdf', function () {
 				return {};
 			});
 		}
@@ -72,7 +74,7 @@ describe('hijack require', function () {
 
 	it('will still throw if you are trying to incorrectly resolve a module', function () {
 		function test() {
-			module.hijackRequire({}, function () {
+			hijack.require(module, {}, function () {
 				return {};
 			});
 		}
@@ -86,7 +88,7 @@ describe('hijack require', function () {
 	});
 
 	it('works with core module', function () {
-		module.hijackRequire('fs', function () {
+		hijack.require(module, 'fs', function () {
 			var orig = require('fs');
 
 			orig.test = function () {
@@ -103,14 +105,14 @@ describe('hijack require', function () {
 	});
 
 	it('works with local modules', function () {
-		module.hijackRequire('./fixture', function () {
+		hijack.require(module, './fixture', function () {
 			return {a : 1};
 		});
 		assert.deepEqual(require('./fixture'), {a : 1});
 	});
 
 	it('works with contributed modules', function () {
-		module.hijackRequire('lodash', function () {
+		hijack.require(module, 'lodash', function () {
 			var lodash = require('lodash');
 
 			lodash.test = 'test';
@@ -120,6 +122,50 @@ describe('hijack require', function () {
 
 		assert(lo.isEqual(lo.test, 'test'));
 	});
+
+	it('works with contributed modules like express', function () {
+
+		function sendRequest() {
+			return Bluebird.delay(1000).return('http://localhost:1337/hello').then(request).get('body').tap(console.log);
+		}
+
+
+		function hijackedCallback(req, res) {
+			res.send('hey it works!');
+		}
+
+		hijack.require(module, 'express', function () {
+			var _express = require('express');
+
+			return function () {
+				var _app = _express.apply(this, arguments);
+
+				hijack.fn(_app, 'get', function (_path, cb) {
+					if (!cb) {
+						return this.hijacked(_path);
+					}
+					return this.hijacked(_path, hijackedCallback);
+				});
+				return _app;
+			};
+		});
+
+		var express = require('express');
+		var app = express();
+
+		app.get('/hello', function (req, res) {
+			res.send(' world!');
+		});
+
+		var server = app.listen(1337);
+
+		return sendRequest()
+			.then(function (body) {
+				assert.equal(body, 'hey it works!');
+				server.close();
+			});
+	});
+
 
 });
 
@@ -131,17 +177,25 @@ describe('hijackFn', function () {
 
 		TestClass.prototype.world = ' world!';
 
-		TestClass.prototype.helloWorld = function () {
+		function helloWorld() {
 			return 'hello';
 		};
 
+		helloWorld.blah = 'blah';
+
+		TestClass.prototype.helloWorld = helloWorld;
+
+
 		var test = new TestClass();
 
-		module.hijackFn(test, 'helloWorld', function () {
+		assert(test.helloWorld.blah === 'blah');
+
+		hijack.fn(test, 'helloWorld', function () {
 			return this.hijacked() + this.world;
 		});
 
 		assert(test.helloWorld(), 'hello world!');
+		assert(test.helloWorld.blah === 'blah');
 
 	});
 });

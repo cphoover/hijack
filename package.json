@@ -1,5 +1,5 @@
 {
-  "name": "hijack-require",
+  "name": "hijack",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -12,6 +12,7 @@
     "bulk-require": "^0.2.1",
     "chai": "^3.4.1",
     "commander": "^1.1.1",
+    "express": "^4.13.3",
     "fs-extra": "^0.26.3",
     "gulp": "^3.9.0",
     "gulp-eslint": "^0.13.2",
@@ -25,6 +26,7 @@
     "lru-cache": "^2.0.4",
     "mockery": "^1.4.0",
     "node-inspector": "^0.12.5",
+    "request": "^2.67.0",
     "sigmund": "^1.0.1",
     "sinon": "^1.17.2",
     "sinon-chai": "^2.8.0",

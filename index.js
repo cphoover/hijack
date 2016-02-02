@@ -6,10 +6,16 @@ var Module = require('module');
 
 var cache = {};
 
+var hijack = {};
+
 Module.prototype.__origRequire = Module.prototype.require;
 
 Module.prototype.require = function (path) {
+	// console.log('requireing path', path);
+	// console.log('this.id', this.id);
 	var resolvedPath = Module._resolveFilename(path, this);
+
+	// console.log('cache', util.inspect(cache, {showHidden: true, depth: 1}));
 
 	if (cache[resolvedPath]) {
 
@@ -25,15 +31,18 @@ Module.prototype.require = function (path) {
 };
 
 // hijackRequire
-Module.prototype.hijackRequire = function (path, fn) {
+hijack.require = function (mod, path, fn) {
 
 	// @TODO do we really have to cause all of these unnecessary errors
 	// if the module isn't being required? seems like there has to be a better way
 	try {
-		var resolvedPath = Module._resolveFilename(path, this);
+		// console.log('hijackRequire this.id', this.id);
+		var resolvedPath = Module._resolveFilename(path, mod);
 
 		cache[resolvedPath] = fn;
 		cache[resolvedPath].___uninitialized = true;
+
+		// console.log('added to cache: ' + resolvedPath, util.inspect(cache[resolvedPath], {showHidden: true, depth: 1}));
 	} catch (e) {
 		if (e.code !== 'MODULE_NOT_FOUND') {
 			throw e;
@@ -44,16 +53,26 @@ Module.prototype.hijackRequire = function (path, fn) {
 var originalFn  = 'hijacked',
 	originalKey = '__' + originalFn + '__';
 
-Module.prototype.hijackFn = function (object, method, fn) {
+hijack.fn = function (object, method, fn) {
 
 	// now when I call object[method] i want to invoke fn from the whatever context it is called with...
 	// but with this.hijackedMethod to be set
-	object[originalKey + method] = object[method];
+	var originalMethodKey = originalKey + method;
+	object[originalMethodKey] = object[method];
 	object[method] = function () {
-		var self = Object.create(this);
+		var self = this;
 
 		self[originalFn] = object[originalKey + method];
 
 		return fn.apply(self, arguments);
 	};
+
+	// shim safely by saving all fields
+	for (var i in object[originalMethodKey]) {
+		if (object[originalMethodKey].hasOwnProperty(i)) {
+			object[method][i] = object[originalMethodKey][i]
+		}
+	}
 };
+
+module.exports = hijack;
