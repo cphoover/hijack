@@ -126,7 +126,11 @@ describe('hijack require', function () {
 	it('works with contributed modules like express', function () {
 
 		function sendRequest() {
-			return Bluebird.delay(1000).return('http://localhost:1337/hello').then(request).get('body').tap(console.log);
+			return Bluebird.delay(1000)
+				.return('http://localhost:1337/hello')
+				.then(request)
+				.get('body')
+				.tap(console.log);
 		}
 
 
@@ -179,7 +183,7 @@ describe('hijackFn', function () {
 
 		function helloWorld() {
 			return 'hello';
-		};
+		}
 
 		helloWorld.blah = 'blah';
 

@@ -11,11 +11,7 @@ var hijack = {};
 Module.prototype.__origRequire = Module.prototype.require;
 
 Module.prototype.require = function (path) {
-	// console.log('requireing path', path);
-	// console.log('this.id', this.id);
 	var resolvedPath = Module._resolveFilename(path, this);
-
-	// console.log('cache', util.inspect(cache, {showHidden: true, depth: 1}));
 
 	if (cache[resolvedPath]) {
 
@@ -36,7 +32,6 @@ hijack.require = function (mod, path, fn) {
 	// @TODO do we really have to cause all of these unnecessary errors
 	// if the module isn't being required? seems like there has to be a better way
 	try {
-		// console.log('hijackRequire this.id', this.id);
 		var resolvedPath = Module._resolveFilename(path, mod);
 
 		cache[resolvedPath] = fn;
@@ -55,9 +50,8 @@ var originalFn  = 'hijacked',
 
 hijack.fn = function (object, method, fn) {
 
-	// now when I call object[method] i want to invoke fn from the whatever context it is called with...
-	// but with this.hijackedMethod to be set
 	var originalMethodKey = originalKey + method;
+
 	object[originalMethodKey] = object[method];
 	object[method] = function () {
 		var self = this;
@@ -73,6 +67,8 @@ hijack.fn = function (object, method, fn) {
 			object[method][i] = object[originalMethodKey][i]
 		}
 	}
+
+	object[method].__isHijacked = true;
 };
 
 module.exports = hijack;
